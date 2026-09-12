@@ -6,7 +6,7 @@ import { createLogger } from '../logging/logger-buffer';
 import { runMemoryFlushIfNeeded } from '../memory/memory-flush';
 import { MODEL_PRIORITY_CONFIG, scoreModel } from './model-priority-config';
 import { AUTO_MODEL_ID } from './default-models';
-import { activeAgentStorage, autoModeSelectedModelsStorage, customModelsStorage, saveArtifact } from '@extension/storage';
+import { activeAgentStorage, addMessage, autoModeSelectedModelsStorage, customModelsStorage, saveArtifact, touchChat } from '@extension/storage';
 import type { chatModelToPiModel } from './model-adapter';
 import type {
   ChatMessagePart,
@@ -52,7 +52,15 @@ const isRateLimitError = (error: string): boolean =>
   error.includes('429') ||
   error.toLowerCase().includes('rate_limit') ||
   error.toLowerCase().includes('too many requests') ||
-  error.toLowerCase().includes('quota exceeded');
+  error.toLowerCase().includes('quota exceeded') ||
+  error.toLowerCase().includes('resource_exhausted');
+
+/** Returns true if error indicates a long-lived quota (daily/monthly) rather than a per-minute RPM limit. */
+const isDailyQuotaError = (error: string): boolean =>
+  error.toLowerCase().includes('daily') ||
+  error.toLowerCase().includes('per day') ||
+  error.toLowerCase().includes('per_day') ||
+  (error.toLowerCase().includes('resource_exhausted') && !parseRetryDelayMs(error));
 
 /** Parse retryDelay from a 429 error body (e.g. Google "retryDelay": "14.7s" or "905ms").
  *  Handles both plain and backslash-escaped quotes (the field is often inside double-encoded JSON). */
@@ -421,7 +429,12 @@ const handleLLMStream = async (
               const backoffMs = retryDelayMs ?? MODEL_PRIORITY_CONFIG.rateLimitBackoffMs;
               markRateLimited(modelKey, backoffMs);
 
-              // Single model mode: retry up to 3 times with 2-minute wait
+              // Single model mode: daily quota → fail immediately (2-min retry won't help)
+              if (isSingleModelMode && isDailyQuotaError(agentError)) {
+                sendError(port, chatId, `Daily quota exceeded for ${modelDisplayName} — try again tomorrow or switch models.`);
+                return;
+              }
+              // Single model mode: RPM rate limit → retry up to 3 times with 2-minute wait
               if (isSingleModelMode) {
                 const retryCount = singleModelRetryCount.get(modelKey) ?? 0;
                 if (retryCount < singleModelMaxRetries && !waitedModels.has(modelKey)) {
@@ -527,7 +540,9 @@ const handleLLMStream = async (
           const backoffMs = retryDelayMs ?? MODEL_PRIORITY_CONFIG.rateLimitBackoffMs;
           markRateLimited(modelKey, backoffMs);
 
-          if (isSingleModelMode) {
+          if (isSingleModelMode && isDailyQuotaError(runErrMsg)) {
+            sendError(port, chatId, `Daily quota exceeded for ${modelDisplayName} — try again tomorrow or switch models.`);
+          } else if (isSingleModelMode) {
             const retryCount = singleModelRetryCount.get(modelKey) ?? 0;
             if (retryCount < singleModelMaxRetries && !waitedModels.has(modelKey)) {
               singleModelRetryCount.set(modelKey, retryCount + 1);
@@ -563,7 +578,6 @@ const handleLLMStream = async (
     // Persist the assistant message from the background SW
     if (assistantParts.length > 0 && assistantMessageId) {
       try {
-        const { addMessage, touchChat } = await import('@extension/storage');
         await addMessage({
           id: assistantMessageId, chatId, role: 'assistant',
           parts: assistantParts, createdAt: Date.now(), model: persistedModel.id,
@@ -584,7 +598,6 @@ const handleLLMStream = async (
 
     if (assistantParts.length > 0 && assistantMessageId) {
       try {
-        const { addMessage, touchChat } = await import('@extension/storage');
         await addMessage({
           id: assistantMessageId, chatId, role: 'assistant',
           parts: assistantParts, createdAt: Date.now(), model: modelConfig.id,
