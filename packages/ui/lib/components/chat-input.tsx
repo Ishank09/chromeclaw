@@ -1,4 +1,5 @@
 import { AttachmentsButton } from './attachments-button';
+import { AutoModelSelector } from './auto-model-selector';
 import { MicButton } from './mic-button';
 import { PreviewAttachment } from './preview-attachment';
 import {
@@ -429,22 +430,30 @@ const ChatInput = ({
               onClick={() => fileInputRef.current?.click()}
             />
             {models.length > 0 && (
-              <Select onValueChange={onModelChange} value={selectedModelId}>
-                <SelectTrigger
-                  className={cn(
-                    'text-muted-foreground h-auto border-none bg-transparent px-2 py-1.5 font-medium shadow-none transition-colors',
-                    'hover:bg-accent hover:text-foreground',
-                  )}>
-                  <SelectValue placeholder={t('chat_modelSelect')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {models.map(model => (
-                    <SelectItem key={model.dbId ?? model.id} value={model.dbId ?? model.id}>
-                      {model.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <AutoModelSelector
+                  isAutoMode={selectedModelId === '__auto__'}
+                  models={models}
+                  onModelChange={onModelChange}
+                  selectedModelId={selectedModelId}
+                />
+                <Select onValueChange={onModelChange} value={selectedModelId}>
+                  <SelectTrigger
+                    className={cn(
+                      'text-muted-foreground h-auto border-none bg-transparent px-2 py-1.5 font-medium shadow-none transition-colors',
+                      'hover:bg-accent hover:text-foreground',
+                    )}>
+                    <SelectValue placeholder={t('chat_modelSelect')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {models.map(model => (
+                      <SelectItem key={model.dbId ?? model.id} value={model.dbId ?? model.id}>
+                        {model.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
             )}
             {activeModelHint && (
               <span className="text-muted-foreground/70 pointer-events-none select-none text-xs">

@@ -67,8 +67,8 @@ const parseRetryDelayMs = (error: string): number | null => {
 /**
  * Build the model chain for a request.
  *
- * - Auto mode (primaryModel.id === AUTO_MODEL_ID): returns ALL real models
- *   sorted by capability score; rate-limited models are pushed to the back.
+ * - Auto mode (primaryModel.id === AUTO_MODEL_ID): returns selected real models
+ *   (or all if none selected) sorted by capability score; rate-limited models are pushed to the back.
  * - Specific model selected: returns only that model — no fallback.
  */
 const buildModelChain = async (primaryModel: ChatModel): Promise<ChatModel[]> => {
@@ -77,11 +77,21 @@ const buildModelChain = async (primaryModel: ChatModel): Promise<ChatModel[]> =>
     return [primaryModel];
   }
 
-  // Auto mode → sort all real models by capability score
+  // Auto mode → get selected models from storage
+  const { autoModeSelectedModelsStorage } = await import('@extension/storage');
+  const selection = await autoModeSelectedModelsStorage.get();
+  const selectedModelIds = selection.selectedModelIds.length > 0 ? selection.selectedModelIds : null;
+
+  // Get all real models
   const allDbModels = await customModelsStorage.get() ?? [];
-  const realModels: ChatModel[] = allDbModels
+  let realModels: ChatModel[] = allDbModels
     .filter(m => m.modelId !== AUTO_MODEL_ID)
     .map(dbModelToChatModel);
+
+  // Filter to selected models if any are selected
+  if (selectedModelIds) {
+    realModels = realModels.filter(m => selectedModelIds.includes(m.dbId ?? m.id));
+  }
 
   return realModels.sort((a, b) => {
     const aLimited = isRateLimited(a.dbId ?? a.id);
@@ -198,6 +208,12 @@ const handleLLMStream = async (
     let streamSucceeded = false;
     // Tracks which models already got a short-wait retry so we don't loop forever
     const waitedModels = new Set<string>();
+
+    // Determine retry behavior based on number of selected models
+    const isSingleModelMode = modelsToTry.length === 1;
+    const singleModelMaxRetries = 3;
+    const singleModelWaitMs = 120_000; // 2 minutes
+    const singleModelRetryCount = new Map<string, number>();
 
     for (let modelIdx = 0; modelIdx < modelsToTry.length; modelIdx++) {
       const currentModel = modelsToTry[modelIdx];
@@ -399,13 +415,32 @@ const handleLLMStream = async (
               const backoffMs = retryDelayMs ?? MODEL_PRIORITY_CONFIG.rateLimitBackoffMs;
               markRateLimited(modelKey, backoffMs);
 
-              // Short delay (≤60s) and haven't waited for this model yet → wait and retry same model
-              if (retryDelayMs !== null && retryDelayMs <= 60_000 && !waitedModels.has(modelKey)) {
+              // Single model mode: retry up to 3 times with 2-minute wait
+              if (isSingleModelMode) {
+                const retryCount = singleModelRetryCount.get(modelKey) ?? 0;
+                if (retryCount < singleModelMaxRetries && !waitedModels.has(modelKey)) {
+                  singleModelRetryCount.set(modelKey, retryCount + 1);
+                  waitedModels.add(modelKey);
+                  streamLog.info('Rate limit: single model mode, retrying with 2-min wait', {
+                    chatId, model: currentModel.id, attempt: retryCount + 1, maxAttempts: singleModelMaxRetries,
+                  });
+                  safeSend(port, {
+                    type: 'LLM_STREAM_RETRY', chatId,
+                    attempt: retryCount, maxAttempts: singleModelMaxRetries,
+                    reason: `Rate limited — retrying in 2 minutes (${retryCount + 1}/${singleModelMaxRetries})…`,
+                    strategy: 'model-fallback',
+                    activeModel: `${modelDisplayName} (retry ${retryCount + 1}/${singleModelMaxRetries} in 2m)`,
+                  } satisfies LLMStreamRetry);
+                  shortWaitMs = singleModelWaitMs;
+                  return;
+                }
+              }
+              // Multi-model mode: short delay (≤60s) and haven't waited for this model yet → wait and retry
+              else if (retryDelayMs !== null && retryDelayMs <= 60_000 && !waitedModels.has(modelKey)) {
                 waitedModels.add(modelKey);
                 streamLog.info('Rate limit: short wait, retrying same model', {
                   chatId, model: currentModel.id, waitMs: retryDelayMs,
                 });
-                // Signal UI that we're waiting, then set flag for post-runAgent handling
                 safeSend(port, {
                   type: 'LLM_STREAM_RETRY', chatId,
                   attempt: modelIdx, maxAttempts: modelsToTry.length,
@@ -485,7 +520,15 @@ const handleLLMStream = async (
           const retryDelayMs = parseRetryDelayMs(runErrMsg);
           const backoffMs = retryDelayMs ?? MODEL_PRIORITY_CONFIG.rateLimitBackoffMs;
           markRateLimited(modelKey, backoffMs);
-          if (retryDelayMs !== null && retryDelayMs <= 60_000 && !waitedModels.has(modelKey)) {
+
+          if (isSingleModelMode) {
+            const retryCount = singleModelRetryCount.get(modelKey) ?? 0;
+            if (retryCount < singleModelMaxRetries && !waitedModels.has(modelKey)) {
+              singleModelRetryCount.set(modelKey, retryCount + 1);
+              waitedModels.add(modelKey);
+              shortWaitMs = singleModelWaitMs;
+            }
+          } else if (retryDelayMs !== null && retryDelayMs <= 60_000 && !waitedModels.has(modelKey)) {
             waitedModels.add(modelKey);
             shortWaitMs = retryDelayMs;
           }

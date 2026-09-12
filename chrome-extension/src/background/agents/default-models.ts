@@ -58,6 +58,19 @@ export const PRESET_MODELS: PresetModel[] = [
     routingMode: 'direct',
   },
 
+  // ── Google Gemini 2 (second Gemini account for rate-limit fallback) ──
+  {
+    id: 'preset-google-gemini-flash-lite-2',
+    name: 'gemini_2',
+    provider: 'google',
+    modelId: 'gemini-3.5-flash-lite',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    apiKey: process.env.CEB_GOOGLE_API_KEY_2 || '',
+    supportsTools: true,
+    supportsReasoning: true,
+    routingMode: 'direct',
+  },
+
   // ── Groq — gpt-oss-120b (second best: fast, 120B params) ──────────────────
   // Free tier: 6000 TPM hard limit. contextWindow set to 6000 so compaction
   // kicks in before the request reaches the model.
