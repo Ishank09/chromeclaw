@@ -399,8 +399,8 @@ const handleLLMStream = async (
               const backoffMs = retryDelayMs ?? MODEL_PRIORITY_CONFIG.rateLimitBackoffMs;
               markRateLimited(modelKey, backoffMs);
 
-              // Short delay (≤30s) and haven't waited for this model yet → wait and retry same model
-              if (retryDelayMs !== null && retryDelayMs <= 30_000 && !waitedModels.has(modelKey)) {
+              // Short delay (≤60s) and haven't waited for this model yet → wait and retry same model
+              if (retryDelayMs !== null && retryDelayMs <= 60_000 && !waitedModels.has(modelKey)) {
                 waitedModels.add(modelKey);
                 streamLog.info('Rate limit: short wait, retrying same model', {
                   chatId, model: currentModel.id, waitMs: retryDelayMs,
@@ -485,7 +485,7 @@ const handleLLMStream = async (
           const retryDelayMs = parseRetryDelayMs(runErrMsg);
           const backoffMs = retryDelayMs ?? MODEL_PRIORITY_CONFIG.rateLimitBackoffMs;
           markRateLimited(modelKey, backoffMs);
-          if (retryDelayMs !== null && retryDelayMs <= 30_000 && !waitedModels.has(modelKey)) {
+          if (retryDelayMs !== null && retryDelayMs <= 60_000 && !waitedModels.has(modelKey)) {
             waitedModels.add(modelKey);
             shortWaitMs = retryDelayMs;
           }
