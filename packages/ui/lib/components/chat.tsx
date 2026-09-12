@@ -349,6 +349,7 @@ const Chat = ({
               }
               sendMessage(content, attachments);
             }}
+            selectedModel={selectedModel}
             selectedModelId={selectedModel.dbId ?? selectedModel.id}
             setInput={setInput}
             thinkingLevel={thinkingLevel}

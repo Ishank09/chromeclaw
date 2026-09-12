@@ -54,6 +54,7 @@ type ChatInputProps = {
   stop: () => void;
   models: ChatModel[];
   selectedModelId: string;
+  selectedModel?: ChatModel;
   onModelChange: (modelId: string) => void;
   thinkingLevel?: ThinkingLevel;
   onThinkingLevelChange?: (level: ThinkingLevel) => void;
@@ -71,6 +72,7 @@ const ChatInput = ({
   stop,
   models,
   selectedModelId,
+  selectedModel,
   onModelChange,
   thinkingLevel,
   onThinkingLevelChange,
@@ -431,12 +433,14 @@ const ChatInput = ({
             />
             {models.length > 0 && (
               <>
-                <AutoModelSelector
-                  isAutoMode={selectedModelId === 'preset-auto' || selectedModelId === '__auto__'}
-                  models={models}
-                  onModelChange={onModelChange}
-                  selectedModelId={selectedModelId}
-                />
+                {selectedModel && (
+                  <AutoModelSelector
+                    isAutoMode={selectedModel.id === 'preset-auto'}
+                    models={models}
+                    onModelChange={onModelChange}
+                    selectedModelId={selectedModelId}
+                  />
+                )}
                 <Select onValueChange={onModelChange} value={selectedModelId}>
                   <SelectTrigger
                     className={cn(
