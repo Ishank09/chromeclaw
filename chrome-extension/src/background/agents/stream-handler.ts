@@ -6,7 +6,7 @@ import { createLogger } from '../logging/logger-buffer';
 import { runMemoryFlushIfNeeded } from '../memory/memory-flush';
 import { MODEL_PRIORITY_CONFIG, scoreModel } from './model-priority-config';
 import { AUTO_MODEL_ID } from './default-models';
-import { activeAgentStorage, customModelsStorage, saveArtifact } from '@extension/storage';
+import { activeAgentStorage, autoModeSelectedModelsStorage, customModelsStorage, saveArtifact } from '@extension/storage';
 import type { chatModelToPiModel } from './model-adapter';
 import type {
   ChatMessagePart,
@@ -82,7 +82,6 @@ const buildModelChain = async (primaryModel: ChatModel): Promise<ChatModel[]> =>
   }
 
   // Auto mode → get selected models from storage
-  const { autoModeSelectedModelsStorage } = await import('@extension/storage');
   const selection = await autoModeSelectedModelsStorage.get();
   const selectedModelIds = selection.selectedModelIds.length > 0 ? selection.selectedModelIds : null;
 
