@@ -435,7 +435,7 @@ const ChatInput = ({
               <>
                 {selectedModel && (
                   <AutoModelSelector
-                    isAutoMode={selectedModel.id === 'preset-auto'}
+                    isAutoMode={selectedModel.id === '__auto__' || selectedModel.dbId === 'preset-auto'}
                     models={models}
                     onModelChange={onModelChange}
                     selectedModelId={selectedModelId}
