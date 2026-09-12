@@ -58,6 +58,8 @@ type ChatInputProps = {
   onThinkingLevelChange?: (level: ThinkingLevel) => void;
   /** Supported thinking levels for the current web provider (empty = no dropdown). */
   supportedThinkingLevels?: ThinkingLevel[];
+  /** When Auto model is active, shows which model is currently being used. */
+  activeModelHint?: string | null;
 };
 
 const ChatInput = ({
@@ -72,6 +74,7 @@ const ChatInput = ({
   thinkingLevel,
   onThinkingLevelChange,
   supportedThinkingLevels,
+  activeModelHint,
 }: ChatInputProps) => {
   const t = useT();
   const sttConfig = useStorage(sttConfigStorage);
@@ -442,6 +445,11 @@ const ChatInput = ({
                   ))}
                 </SelectContent>
               </Select>
+            )}
+            {activeModelHint && (
+              <span className="text-muted-foreground/70 pointer-events-none select-none text-xs">
+                → {activeModelHint}
+              </span>
             )}
           </div>
           <div className="flex items-center gap-1">

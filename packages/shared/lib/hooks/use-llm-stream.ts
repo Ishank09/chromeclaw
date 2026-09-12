@@ -11,6 +11,7 @@ import type {
   LLMStreamChunk,
   LLMStreamEnd,
   LLMStreamError,
+  LLMStreamRetry,
   ToolPartState,
 } from '../chat-types.js';
 
@@ -38,6 +39,7 @@ interface UseLLMStreamReturn {
   stop: () => void;
   input: string;
   setInput: React.Dispatch<React.SetStateAction<string>>;
+  activeModelHint: string | null;
 }
 
 const useLLMStream = ({
@@ -53,6 +55,7 @@ const useLLMStream = ({
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [status, setStatus] = useState<StreamingStatus>('idle');
   const [input, setInput] = useState('');
+  const [activeModelHint, setActiveModelHint] = useState<string | null>(null);
 
   const portRef = useRef<chrome.runtime.Port | null>(null);
   const abortedRef = useRef(false);
@@ -208,6 +211,7 @@ const useLLMStream = ({
     (content: string, attachments?: Attachment[]) => {
       if (status === 'streaming' || status === 'connecting') return;
 
+      setActiveModelHint(null);
       const userParts: ChatMessagePart[] = [];
 
       // Add file parts first (for attachments)
@@ -275,6 +279,13 @@ const useLLMStream = ({
             case 'LLM_STEP_FINISH':
               // Step finish is informational — no UI action needed yet
               break;
+            case 'LLM_STREAM_RETRY': {
+              const retry = msg as unknown as LLMStreamRetry;
+              if (retry.strategy === 'model-fallback' && retry.activeModel) {
+                setActiveModelHint(retry.activeModel as string);
+              }
+              break;
+            }
             case 'LLM_STREAM_ERROR':
               handleError(msg as unknown as LLMStreamError);
               break;
@@ -353,6 +364,7 @@ const useLLMStream = ({
     stop,
     input,
     setInput,
+    activeModelHint,
   };
 };
 
