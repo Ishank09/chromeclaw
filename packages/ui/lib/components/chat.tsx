@@ -201,7 +201,7 @@ const Chat = ({
     [selectedModel.webProviderId],
   );
 
-  const { messages, setMessages, sendMessage, status, stop, input, setInput } = useLLMStream({
+  const { messages, setMessages, sendMessage, status, stop, input, setInput, activeModelHint } = useLLMStream({
     chatId,
     model: selectedModel,
     thinkingLevel: supportedThinkingLevels.length > 0 ? thinkingLevel : undefined,
@@ -299,6 +299,7 @@ const Chat = ({
 
         <div className="bg-background sticky bottom-0 z-[1] mx-auto flex w-full max-w-4xl gap-2 border-t-0 px-2 pb-3 md:px-4 md:pb-4">
           <ChatInput
+            activeModelHint={activeModelHint}
             input={input}
             models={models}
             onModelChange={onModelChange}
@@ -348,6 +349,7 @@ const Chat = ({
               }
               sendMessage(content, attachments);
             }}
+            selectedModel={selectedModel}
             selectedModelId={selectedModel.dbId ?? selectedModel.id}
             setInput={setInput}
             thinkingLevel={thinkingLevel}

@@ -121,7 +121,7 @@ type ModelProvider =
 const PROVIDER_DEFAULT_BASE_URLS = {
   openai: 'https://api.openai.com/v1',
   anthropic: 'https://api.anthropic.com',
-  google: 'https://generativelanguage.googleapis.com',
+  google: 'https://generativelanguage.googleapis.com/v1beta',
   openrouter: 'https://openrouter.ai/api/v1',
   requesty: 'https://router.requesty.ai/v1',
 } as const;
@@ -368,7 +368,9 @@ interface LLMStreamRetry {
   attempt: number;
   maxAttempts: number;
   reason: string;
-  strategy: 'compaction' | 'truncate-tool-results';
+  strategy: 'compaction' | 'truncate-tool-results' | 'model-fallback';
+  /** When strategy is 'model-fallback', the human-readable name of the model being used. */
+  activeModel?: string;
 }
 
 /** TTS audio message — background -> UI */

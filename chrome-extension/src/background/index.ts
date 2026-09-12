@@ -1,5 +1,6 @@
 import 'webextension-polyfill';
 import { handleLLMStream } from './agents/stream-handler';
+import { initPresetModels } from './agents/init-preset-models';
 import { initChannels, validateChannelAuth, toggleChannel } from './channels';
 import { saveChannelConfig, getChannelConfig, createDefaultChannelConfig } from './channels/config';
 import {
@@ -84,6 +85,9 @@ chrome.runtime.onStartup.addListener(() => {
     heartbeatLog.error('onStartup heartbeat start failed', { error: String(err) });
   });
 });
+
+// Sync preset models from .env into Chrome storage on every SW start.
+Promise.resolve().then(() => initPresetModels());
 
 // Start cron — use microtask to avoid setTimeout race with Firefox event page suspension.
 // IndexedDB is available immediately; the 1-second delay was unnecessary and risky.

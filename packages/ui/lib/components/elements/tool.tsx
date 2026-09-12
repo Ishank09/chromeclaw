@@ -15,7 +15,7 @@ import type { ComponentProps, ReactNode } from 'react';
 type ToolProps = ComponentProps<typeof Collapsible>;
 
 const Tool = ({ className, ...props }: ToolProps) => (
-  <Collapsible className={cn('not-prose mb-4 w-full rounded-md border', className)} {...props} />
+  <Collapsible className={cn('not-prose mb-1 w-full rounded border border-border/30', className)} {...props} />
 );
 
 type ToolHeaderProps = {
@@ -34,14 +34,14 @@ const statusLabels: Record<ToolPartState, string> = {
 };
 
 const statusIcons: Record<ToolPartState, ReactNode> = {
-  'input-streaming': <CircleIcon className="size-4" />,
-  'input-available': <ClockIcon className="size-4 animate-pulse" />,
-  'output-available': <CheckCircleIcon className="size-4 text-green-600" />,
-  'output-error': <XCircleIcon className="size-4 text-red-600" />,
+  'input-streaming': <CircleIcon className="size-2.5" />,
+  'input-available': <ClockIcon className="size-2.5 animate-pulse" />,
+  'output-available': <CheckCircleIcon className="size-2.5 text-green-600" />,
+  'output-error': <XCircleIcon className="size-2.5 text-red-600" />,
 };
 
 const getStatusBadge = (status: ToolPartState) => (
-  <Badge className="flex items-center gap-1 rounded-full text-xs" variant="secondary">
+  <Badge className="flex items-center gap-0.5 rounded-full px-1.5 py-0 text-[10px] leading-4" variant="secondary">
     {statusIcons[status]}
     <span>{statusLabels[status]}</span>
   </Badge>
@@ -49,27 +49,27 @@ const getStatusBadge = (status: ToolPartState) => (
 
 const ToolHeader = ({ className, name, state, onCopy, ...props }: ToolHeaderProps) => (
   <CollapsibleTrigger
-    className={cn('flex w-full min-w-0 items-center justify-between gap-2 p-3', className)}
+    className={cn('flex w-full min-w-0 items-center justify-between gap-1.5 px-2 py-1', className)}
     {...props}>
-    <div className="flex min-w-0 flex-1 items-center gap-2">
-      <WrenchIcon className="text-muted-foreground size-4 shrink-0" />
-      <span className="truncate text-sm font-medium">{name}</span>
+    <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      <WrenchIcon className="text-muted-foreground/50 size-3 shrink-0" />
+      <span className="text-muted-foreground truncate text-xs">{name}</span>
     </div>
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="flex shrink-0 items-center gap-1.5">
       {getStatusBadge(state)}
       {onCopy && (
         <Button
-          className="size-6"
+          className="size-5"
           onClick={e => {
             e.stopPropagation();
             onCopy();
           }}
           size="icon"
           variant="ghost">
-          <CopyIcon className="size-3" />
+          <CopyIcon className="size-2.5" />
         </Button>
       )}
-      <ChevronDownIcon className="text-muted-foreground size-4 transition-transform group-data-[state=open]:rotate-180" />
+      <ChevronDownIcon className="text-muted-foreground/50 size-3 transition-transform group-data-[state=open]:rotate-180" />
     </div>
   </CollapsibleTrigger>
 );
@@ -91,11 +91,11 @@ type ToolInputProps = ComponentProps<'div'> & {
 };
 
 const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
-  <div className={cn('space-y-2 overflow-hidden p-4', className)} {...props}>
-    <h4 className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+  <div className={cn('space-y-1.5 overflow-hidden border-t border-border/30 px-3 py-2', className)} {...props}>
+    <h4 className="text-muted-foreground text-[10px] font-medium uppercase tracking-wide">
       Parameters
     </h4>
-    <pre className="bg-muted/50 overflow-x-auto rounded-md p-3 font-mono text-xs">
+    <pre className="bg-muted/50 overflow-x-auto rounded p-2 font-mono text-[10px]">
       {JSON.stringify(input, null, 2)}
     </pre>
   </div>
@@ -112,13 +112,13 @@ const ToolOutput = ({ className, output, errorText, ...props }: ToolOutputProps)
   }
 
   return (
-    <div className={cn('space-y-2 p-4', className)} {...props}>
-      <h4 className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+    <div className={cn('space-y-1.5 border-t border-border/30 px-3 py-2', className)} {...props}>
+      <h4 className="text-muted-foreground text-[10px] font-medium uppercase tracking-wide">
         {errorText ? 'Error' : 'Result'}
       </h4>
       <div
         className={cn(
-          'overflow-x-auto rounded-md text-xs [&_table]:w-full',
+          'overflow-x-auto rounded text-[10px] [&_table]:w-full',
           errorText ? 'bg-destructive/10 text-destructive' : 'bg-muted/50 text-foreground',
         )}>
         {errorText && <div>{errorText}</div>}

@@ -253,7 +253,7 @@ const ToolCallPart = ({ part, state, toolName, args, result }: ToolCallPartProps
 
   return (
   <div className="w-full" key={part.toolCallId}>
-    <Tool className="w-full" defaultOpen={true}>
+    <Tool className="w-full" defaultOpen={false}>
       <ToolHeader name={toolName} onCopy={isComplete ? handleCopy : undefined} state={state} />
       <ToolContent>
         {(state === 'input-available' || state === 'output-available' || state === 'output-error') && (
