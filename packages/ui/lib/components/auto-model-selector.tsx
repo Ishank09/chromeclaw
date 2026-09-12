@@ -66,6 +66,7 @@ const AutoModelSelector = ({
     [],
   );
 
+  // Hide if not auto mode or no real models to select from
   if (!isAutoMode || realModels.length === 0) return null;
 
   const displayText = selectedIds.length === 0 ? 'All' : `${selectedIds.length}/${realModels.length}`;

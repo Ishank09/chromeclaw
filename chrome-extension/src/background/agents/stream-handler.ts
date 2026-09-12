@@ -72,8 +72,12 @@ const parseRetryDelayMs = (error: string): number | null => {
  * - Specific model selected: returns only that model — no fallback.
  */
 const buildModelChain = async (primaryModel: ChatModel): Promise<ChatModel[]> => {
-  // Specific model selected → single-entry chain, no fallback
-  if (primaryModel.id !== AUTO_MODEL_ID) {
+  // Get all real models first to check against selected
+  const allDbModels = await customModelsStorage.get() ?? [];
+  const autoModel = allDbModels.find(m => m.modelId === AUTO_MODEL_ID);
+
+  // Specific model selected (not auto mode) → single-entry chain, no fallback
+  if (!autoModel || primaryModel.id !== autoModel.id) {
     return [primaryModel];
   }
 
@@ -82,8 +86,7 @@ const buildModelChain = async (primaryModel: ChatModel): Promise<ChatModel[]> =>
   const selection = await autoModeSelectedModelsStorage.get();
   const selectedModelIds = selection.selectedModelIds.length > 0 ? selection.selectedModelIds : null;
 
-  // Get all real models
-  const allDbModels = await customModelsStorage.get() ?? [];
+  // Filter to real models (exclude auto model itself)
   let realModels: ChatModel[] = allDbModels
     .filter(m => m.modelId !== AUTO_MODEL_ID)
     .map(dbModelToChatModel);
