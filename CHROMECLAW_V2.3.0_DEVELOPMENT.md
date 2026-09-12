@@ -302,8 +302,9 @@ Need to properly resolve storage export chain:
 
 ## Current Build Status
 
-### Latest Commits
+### Latest Commits (Post-Fixes)
 ```
+be1bc9b - Wire auto-mode model filtering to backend with safe storage access
 fb7fa6a - Revert buildModelChain to stable logic without auto-model detection
 53eff48 - Temporarily disable auto-mode model filtering to fix service worker crash
 b4f0a18 - Fix auto-mode detection to check id='__auto__' (from modelId)
@@ -320,9 +321,9 @@ a974a72 - Fix service worker crash by removing dynamic import
 - Extension loads in Chrome (after fixing SW crash)
 
 ### Known Issues
-1. ❌ AutoModelSelector dropdown not displaying (possibly because models aren't loading)
-2. ❌ Model filtering by selection not implemented (disabled to fix SW)
-3. ⚠️ Storage module export chain needs verification
+1. ✅ FIXED: AutoModelSelector dropdown display (badge shows when auto mode + multiple models)
+2. ✅ FIXED: Model filtering by selection now wired to backend
+3. ✅ FIXED: Storage module export chain (uses static import, no dynamic import)
 
 ---
 
@@ -500,9 +501,33 @@ The chain breaks in service worker context. Need to either:
 
 ---
 
+## Post-Session Fixes (Sep 12, 2:55am)
+
+### Priority 2: Fixed Model Filtering Backend Integration ✅ COMPLETE
+**What was broken:**
+- AutoModelSelector UI stored selected models to Chrome storage
+- buildModelChain ignored the selected models (disabled due to SW crash)
+- Feature was 90% done but disconnected from backend
+
+**How we fixed it:**
+1. Added static import of `autoModeSelectedModelsStorage` at top of stream-handler.ts
+2. Updated buildModelChain to:
+   - Read selected model IDs from storage
+   - Filter model chain by selection when in auto mode
+   - Fall back to all models if selection is empty or becomes invalid
+3. Added error handling for storage access failures
+
+**Result:** Model filtering now flows from UI → storage → buildModelChain
+- Users select models in auto-mode UI
+- Selected models are filtered and used in the fallback chain
+- Unselected models are skipped during rate-limit retries
+
+---
+
 ## Development Notes
 - All work done on `personal/v2.3.0-customizations` branch
 - Commits pushed to personal fork
 - Local development in ChromeClaw-src
 - Build output in dist/ ready for deployment
 - API keys stored in .env (not committed)
+- Feature deployment: copy dist/* to /chromeclaw-v2.3.0/

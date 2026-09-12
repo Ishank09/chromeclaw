@@ -437,8 +437,6 @@ const ChatInput = ({
                   <AutoModelSelector
                     isAutoMode={selectedModel.id === '__auto__' || selectedModel.dbId === 'preset-auto'}
                     models={models}
-                    onModelChange={onModelChange}
-                    selectedModelId={selectedModelId}
                   />
                 )}
                 <Select onValueChange={onModelChange} value={selectedModelId}>

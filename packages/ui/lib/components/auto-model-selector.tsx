@@ -13,16 +13,12 @@ import type { ChatModel } from '@extension/shared';
 
 type AutoModelSelectorProps = {
   models: ChatModel[];
-  selectedModelId: string;
   isAutoMode: boolean;
-  onModelChange: (modelId: string) => void;
 };
 
 const AutoModelSelector = ({
   models,
-  selectedModelId,
   isAutoMode,
-  onModelChange,
 }: AutoModelSelectorProps) => {
   const t = useT();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
