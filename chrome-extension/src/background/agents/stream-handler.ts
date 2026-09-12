@@ -6,7 +6,7 @@ import { createLogger } from '../logging/logger-buffer';
 import { runMemoryFlushIfNeeded } from '../memory/memory-flush';
 import { MODEL_PRIORITY_CONFIG, scoreModel } from './model-priority-config';
 import { AUTO_MODEL_ID } from './default-models';
-import { activeAgentStorage, customModelsStorage, saveArtifact } from '@extension/storage';
+import { activeAgentStorage, autoModeSelectedModelsStorage, customModelsStorage, saveArtifact } from '@extension/storage';
 import type { chatModelToPiModel } from './model-adapter';
 import type {
   ChatMessagePart,
@@ -83,7 +83,23 @@ const buildModelChain = async (primaryModel: ChatModel): Promise<ChatModel[]> =>
     .filter(m => m.modelId !== AUTO_MODEL_ID)
     .map(dbModelToChatModel);
 
-  return realModels.sort((a, b) => {
+  // Filter by user-selected models if any are selected
+  let selectedModelIds: string[] = [];
+  try {
+    const selection = await autoModeSelectedModelsStorage.get();
+    selectedModelIds = selection.selectedModelIds;
+  } catch (err) {
+    streamLog.warn('Failed to read selected models from storage', { error: err instanceof Error ? err.message : String(err) });
+  }
+
+  const filteredModels = selectedModelIds.length > 0
+    ? realModels.filter(m => selectedModelIds.includes(m.dbId ?? m.id))
+    : realModels;
+
+  // If user selected specific models but none are available (edge case), fall back to all
+  const modelsToUse = filteredModels.length > 0 ? filteredModels : realModels;
+
+  return modelsToUse.sort((a, b) => {
     const aLimited = isRateLimited(a.dbId ?? a.id);
     const bLimited = isRateLimited(b.dbId ?? b.id);
     if (aLimited !== bLimited) return aLimited ? 1 : -1;

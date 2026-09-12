@@ -1,0 +1,179 @@
+
+> chromeclaw-extension@2.3.0 build /Users/ivasania/Documents/Personal/Personal/chromeclaw-src
+> pnpm set-global-env && pnpm base-build
+
+
+> chromeclaw-extension@2.3.0 set-global-env /Users/ivasania/Documents/Personal/Personal/chromeclaw-src
+> bash bash-scripts/set_global_env.sh
+
+
+> chromeclaw-extension@2.3.0 base-build /Users/ivasania/Documents/Personal/Personal/chromeclaw-src
+> pnpm clean:bundle && turbo build
+
+
+> chromeclaw-extension@2.3.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src
+> rimraf dist && turbo clean:bundle
+
+turbo 2.5.6
+
+• Packages in scope: @extension/baileys, @extension/config-panels, @extension/dev-utils, @extension/env, @extension/full-page-chat, @extension/hmr, @extension/i18n, @extension/module-manager, @extension/offscreen-channels, @extension/options, @extension/shared, @extension/sidepanel, @extension/skills, @extension/storage, @extension/tailwindcss-config, @extension/tsconfig, @extension/ui, @extension/vite-config, @extension/zipper, chrome-extension
+• Running clean:bundle in 20 packages
+• Remote caching disabled
+@extension/env:clean:bundle: cache bypass, force executing ce48a13f2ffa8428
+@extension/skills:clean:bundle: cache bypass, force executing a79c2dbb328f1a1b
+@extension/env:clean:bundle: 
+@extension/env:clean:bundle: > @extension/env@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/env
+@extension/env:clean:bundle: > rimraf dist
+@extension/env:clean:bundle: 
+@extension/skills:clean:bundle: 
+@extension/skills:clean:bundle: > @extension/skills@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/skills
+@extension/skills:clean:bundle: > rimraf dist
+@extension/skills:clean:bundle: 
+@extension/hmr:clean:bundle: cache bypass, force executing 95b236e213c688cd
+@extension/storage:clean:bundle: cache bypass, force executing c6c7efb1afcce54f
+@extension/i18n:clean:bundle: cache bypass, force executing dbf62819334b45b6
+@extension/storage:clean:bundle: 
+@extension/storage:clean:bundle: > @extension/storage@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/storage
+@extension/storage:clean:bundle: > rimraf dist
+@extension/storage:clean:bundle: 
+@extension/hmr:clean:bundle: 
+@extension/hmr:clean:bundle: > @extension/hmr@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/hmr
+@extension/hmr:clean:bundle: > rimraf dist && pnpx rimraf build
+@extension/hmr:clean:bundle: 
+@extension/i18n:clean:bundle: 
+@extension/i18n:clean:bundle: > @extension/i18n@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/i18n
+@extension/i18n:clean:bundle: > rimraf dist
+@extension/i18n:clean:bundle: 
+@extension/shared:clean:bundle: cache bypass, force executing 929b8bbac088dde6
+@extension/hmr:clean:bundle: Done in 139ms using pnpm v12.4.1
+@extension/vite-config:clean:bundle: cache bypass, force executing 60e7529815ffff05
+@extension/shared:clean:bundle: 
+@extension/shared:clean:bundle: > @extension/shared@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/shared
+@extension/shared:clean:bundle: > rimraf dist
+@extension/shared:clean:bundle: 
+@extension/vite-config:clean:bundle: 
+@extension/vite-config:clean:bundle: > @extension/vite-config@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/vite-config
+@extension/vite-config:clean:bundle: > pnpx rimraf dist
+@extension/vite-config:clean:bundle: 
+@extension/ui:clean:bundle: cache bypass, force executing ef71ab15b6826a2e
+@extension/dev-utils:clean:bundle: cache bypass, force executing f424daf0b43015c8
+@extension/vite-config:clean:bundle: Done in 86ms using pnpm v12.4.1
+@extension/ui:clean:bundle: 
+@extension/ui:clean:bundle: > @extension/ui@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/ui
+@extension/ui:clean:bundle: > rimraf dist
+@extension/ui:clean:bundle: 
+@extension/dev-utils:clean:bundle: 
+@extension/dev-utils:clean:bundle: > @extension/dev-utils@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/dev-utils
+@extension/dev-utils:clean:bundle: > rimraf dist
+@extension/dev-utils:clean:bundle: 
+@extension/zipper:clean:bundle: cache bypass, force executing 16e59f108e2942f8
+@extension/zipper:clean:bundle: 
+@extension/zipper:clean:bundle: > @extension/zipper@2.2.0 clean:bundle /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/zipper
+@extension/zipper:clean:bundle: > rimraf dist
+@extension/zipper:clean:bundle: 
+
+ Tasks:    10 successful, 10 total
+Cached:    0 cached, 10 total
+  Time:    5.601s 
+
+turbo 2.5.6
+
+• Packages in scope: @extension/baileys, @extension/config-panels, @extension/dev-utils, @extension/env, @extension/full-page-chat, @extension/hmr, @extension/i18n, @extension/module-manager, @extension/offscreen-channels, @extension/options, @extension/shared, @extension/sidepanel, @extension/skills, @extension/storage, @extension/tailwindcss-config, @extension/tsconfig, @extension/ui, @extension/vite-config, @extension/zipper, chrome-extension
+• Running build in 20 packages
+• Remote caching disabled
+@extension/env:ready: cache bypass, force executing 1268b7c6ddba0c9b
+@extension/skills:ready: cache bypass, force executing 421a2f6ddb769610
+@extension/env:ready: 
+@extension/env:ready: > @extension/env@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/env
+@extension/env:ready: > tsc -b
+@extension/env:ready: 
+@extension/skills:ready: 
+@extension/skills:ready: > @extension/skills@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/skills
+@extension/skills:ready: > tsc -b
+@extension/skills:ready: 
+@extension/hmr:ready: cache bypass, force executing b583a72975de96a8
+@extension/i18n:ready: cache bypass, force executing 3f9cddeaef71c48c
+@extension/storage:ready: cache bypass, force executing ed815699b0ac8f7e
+@extension/i18n:ready: 
+@extension/i18n:ready: > @extension/i18n@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/i18n
+@extension/i18n:ready: > tsc -b prepare-build.tsconfig.json && node --env-file=../../.env dist/lib/prepare-build.js && tsc -b
+@extension/i18n:ready: 
+@extension/hmr:ready: 
+@extension/hmr:ready: > @extension/hmr@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/hmr
+@extension/hmr:ready: > tsc -b && rollup --config dist/rollup.config.js
+@extension/hmr:ready: 
+@extension/storage:ready: 
+@extension/storage:ready: > @extension/storage@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/storage
+@extension/storage:ready: > tsc -b
+@extension/storage:ready: 
+@extension/i18n:ready: [38;5;142m[dotenvx@1.49.0] injecting env (0) from /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/env/dist/lib/../../../../.env[39m
+@extension/i18n:ready: I18n build complete
+@extension/hmr:ready: [36m
+@extension/hmr:ready: [1mlib/injections/reload.ts[22m → [1mdist/lib/injections/reload.js[22m...[39m
+@extension/hmr:ready: [32mcreated [1mdist/lib/injections/reload.js[22m in [1m26ms[22m[39m
+@extension/hmr:ready: [36m
+@extension/hmr:ready: [1mlib/injections/refresh.ts[22m → [1mdist/lib/injections/refresh.js[22m...[39m
+@extension/hmr:ready: [32mcreated [1mdist/lib/injections/refresh.js[22m in [1m10ms[22m[39m
+@extension/vite-config:ready: cache bypass, force executing a8160b6d1e0e6e1e
+@extension/shared:ready: cache bypass, force executing 902cfabcffcffaee
+@extension/vite-config:ready: 
+@extension/vite-config:ready: > @extension/vite-config@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/vite-config
+@extension/vite-config:ready: > tsc -b
+@extension/vite-config:ready: 
+@extension/shared:ready: 
+@extension/shared:ready: > @extension/shared@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/shared
+@extension/shared:ready: > tsc -b
+@extension/shared:ready: 
+@extension/offscreen-channels:build: cache bypass, force executing 2ba29aed2dc7f5a4
+@extension/ui:ready: cache bypass, force executing a8ba70c1bc29c74c
+@extension/dev-utils:ready: cache bypass, force executing 575137daf772c206
+@extension/ui:ready: 
+@extension/ui:ready: > @extension/ui@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/ui
+@extension/ui:ready: > tsc && tsc-alias -p tsconfig.json
+@extension/ui:ready: 
+@extension/offscreen-channels:build: 
+@extension/offscreen-channels:build: > @extension/offscreen-channels@2.2.0 build /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/pages/offscreen-channels
+@extension/offscreen-channels:build: > vite build
+@extension/offscreen-channels:build: 
+@extension/dev-utils:ready: 
+@extension/dev-utils:ready: > @extension/dev-utils@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/dev-utils
+@extension/dev-utils:ready: > tsc -b
+@extension/dev-utils:ready: 
+@extension/offscreen-channels:build: [38;5;142m[dotenvx@1.49.0] injecting env (7) from /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/env/dist/lib/../../../../.env[39m
+@extension/offscreen-channels:build: vite v6.3.6 building for production...
+@extension/offscreen-channels:build: transforming...
+chrome-extension:ready: cache bypass, force executing 9065540976122a0f
+@extension/zipper:ready: cache bypass, force executing 19296e7fb9e031cf
+@extension/zipper:ready: 
+@extension/zipper:ready: > @extension/zipper@2.2.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/zipper
+@extension/zipper:ready: > tsc -b
+@extension/zipper:ready: 
+chrome-extension:ready: 
+chrome-extension:ready: > chrome-extension@2.3.0 ready /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/chrome-extension
+chrome-extension:ready: > tsc -b pre-build.tsconfig.json
+chrome-extension:ready: 
+chrome-extension:build: cache bypass, force executing 37d91cc18369912e
+chrome-extension:build: 
+chrome-extension:build: > chrome-extension@2.3.0 build /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/chrome-extension
+chrome-extension:build: > vite build
+chrome-extension:build: 
+chrome-extension:build: [38;5;142m[dotenvx@1.49.0] injecting env (7) from /Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/env/dist/lib/../../../../.env[39m
+chrome-extension:build: vite v6.3.6 building for production...
+chrome-extension:build: transforming...
+chrome-extension:build: ../node_modules/.pnpm/react-error-boundary@6.0.0_react@19.1.1/node_modules/react-error-boundary/dist/react-error-boundary.js (1:0): Module level directives cause errors when bundled, "use client" in "../node_modules/.pnpm/react-error-boundary@6.0.0_react@19.1.1/node_modules/react-error-boundary/dist/react-error-boundary.js" was ignored.
+@extension/ui:ready: lib/components/auto-model-selector.tsx(6,3): error TS2305: Module '"./ui"' has no exported member 'cn'.
+@extension/ui:ready: lib/components/auto-model-selector.tsx(48,66): error TS2339: Property 'modelId' does not exist on type 'ChatModel'.
+@extension/ui:ready: lib/components/auto-model-selector.tsx(91,16): error TS2345: Argument of type '"chat_selectModels"' is not assignable to parameter of type '"extensionDescription" | "extensionName" | "extensionShortName" | "displayErrorInfo" | "displayErrorDescription" | "displayErrorDetailsInfo" | "displayErrorUnknownErrorInfo" | ... 439 more ... | "agents_title"'.
+@extension/ui:ready: lib/components/auto-model-selector.tsx(123,18): error TS2345: Argument of type '"common_clearAll"' is not assignable to parameter of type '"extensionDescription" | "extensionName" | "extensionShortName" | "displayErrorInfo" | "displayErrorDescription" | "displayErrorDetailsInfo" | "displayErrorUnknownErrorInfo" | ... 439 more ... | "agents_title"'.
+@extension/ui:ready:  ELIFECYCLE  Command failed with exit code 2.
+@extension/ui:ready: ERROR: command finished with error: command (/Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/ui) /opt/homebrew/bin/pnpm run ready exited (2)
+@extension/ui#ready: command (/Users/ivasania/Documents/Personal/Personal/chromeclaw-src/packages/ui) /opt/homebrew/bin/pnpm run ready exited (2)
+
+ Tasks:    10 successful, 13 total
+Cached:    0 cached, 13 total
+  Time:    10.654s 
+Failed:    @extension/ui#ready
+
+ ERROR  run failed: command  exited (2)
+ ELIFECYCLE  Command failed with exit code 2.
+ ELIFECYCLE  Command failed with exit code 2.
