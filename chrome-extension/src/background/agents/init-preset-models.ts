@@ -4,6 +4,12 @@ import { createLogger } from '../logging/logger-buffer';
 
 const log = createLogger('model-init');
 
+// Preset IDs that have been renamed/replaced — remove from storage on next init.
+const STALE_PRESET_IDS = new Set([
+  'preset-google-gemini-flash-lite',
+  'preset-google-gemini-flash-lite-2',
+]);
+
 /**
  * Merge preset models into Chrome storage.
  * - Preset models are identified by their stable "preset-*" id.
@@ -17,6 +23,15 @@ export const initPresetModels = async (): Promise<void> => {
     const currentMap = new Map(current.map(m => [m.id, m]));
 
     let changed = false;
+
+    // Remove stale preset entries that have been renamed or replaced.
+    for (const staleId of STALE_PRESET_IDS) {
+      if (currentMap.has(staleId)) {
+        log.info('Removing stale preset model', { id: staleId });
+        currentMap.delete(staleId);
+        changed = true;
+      }
+    }
 
     for (const preset of PRESET_MODELS) {
       if (!preset.apiKey) continue; // skip unconfigured presets

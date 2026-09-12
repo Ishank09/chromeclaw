@@ -45,12 +45,12 @@ export const PRESET_MODELS: PresetModel[] = [
     routingMode: 'direct',
   },
 
-  // ── Google Gemini (best free-tier option, multimodal, good tool calling) ──
+  // ── Google Gemini 2.5 Flash (best free-tier: 10 RPM, 500 RPD) ──────────────
   {
-    id: 'preset-google-gemini-flash-lite',
-    name: 'gemini',
+    id: 'preset-google-gemini-2.5-flash',
+    name: 'gemini-2.5-flash',
     provider: 'google',
-    modelId: 'gemini-3.5-flash-lite',
+    modelId: 'gemini-2.5-flash',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     apiKey: process.env.CEB_GOOGLE_API_KEY || '',
     supportsTools: true,
@@ -58,12 +58,12 @@ export const PRESET_MODELS: PresetModel[] = [
     routingMode: 'direct',
   },
 
-  // ── Google Gemini 2 (second Gemini account for rate-limit fallback) ──
+  // ── Google Gemini 2.5 Flash (second account for rate-limit fallback) ────────
   {
-    id: 'preset-google-gemini-flash-lite-2',
-    name: 'gemini_2',
+    id: 'preset-google-gemini-2.5-flash-2',
+    name: 'gemini-2.5-flash-2',
     provider: 'google',
-    modelId: 'gemini-3.5-flash-lite',
+    modelId: 'gemini-2.5-flash',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     apiKey: process.env.CEB_GOOGLE_API_KEY_2 || '',
     supportsTools: true,
