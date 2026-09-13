@@ -24,6 +24,7 @@ import {
   Chat,
   ChatSidebar,
   FirstRunSetup,
+  MemoryPanel,
   Toaster,
   ErrorDisplay,
   LoadingSpinner,
@@ -63,6 +64,9 @@ const SidePanel = () => {
 
   const [chatKey, setChatKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [memoryOpen, setMemoryOpen] = useState(false);
+  const [injectedInput, setInjectedInput] = useState<{ text: string; autoSubmit: boolean; nonce: number } | undefined>();
+  const handleNewChatRef = useRef<() => void>(() => {});
   const [agents, setAgents] = useState<{ id: string; name: string; emoji: string }[]>([]);
   const [activeAgentId, setActiveAgentId] = useState('main');
   const activeAgentIdRef = useRef(activeAgentId);
@@ -271,6 +275,34 @@ const SidePanel = () => {
     return () => chrome.runtime.onMessage.removeListener(handler);
   }, []);
 
+  // ChromeClaw context-menu actions — stored in session storage by the background
+  // so they survive the side-panel startup race (sendMessage fires before mount).
+  useEffect(() => {
+    const applyPendingAction = (action: Record<string, unknown>) => {
+      if (action.action === 'simplify' && typeof action.text === 'string') {
+        setSidebarOpen(false);
+        setInjectedInput({ text: `Simplify this:\n${action.text}`, autoSubmit: true, nonce: Date.now() });
+        chrome.storage.local.remove('chromeclaw_pending_action');
+      }
+    };
+
+    // Check for an action stored before this panel mounted.
+    chrome.storage.local.get('chromeclaw_pending_action').then(result => {
+      const pending = result['chromeclaw_pending_action'] as Record<string, unknown> | undefined;
+      if (pending) applyPendingAction(pending);
+    });
+
+    // Watch for actions set while the panel is already open.
+    // Use global chrome.storage.onChanged (with area check) — universally supported in Brave.
+    const onChange = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+      if (area !== 'local') return;
+      if (!changes['chromeclaw_pending_action']?.newValue) return;
+      applyPendingAction(changes['chromeclaw_pending_action'].newValue as Record<string, unknown>);
+    };
+    chrome.storage.onChanged.addListener(onChange);
+    return () => chrome.storage.onChanged.removeListener(onChange);
+  }, []);
+
   const handleAgentChange = useCallback(
     async (newAgentId: string) => {
       if (newAgentId === activeAgentId) return;
@@ -341,6 +373,7 @@ const SidePanel = () => {
     setChatKey(k => k + 1);
     lastActiveSessionStorage.set(newId);
   }, [triggerJournal]);
+  handleNewChatRef.current = handleNewChat;
 
   const handleSelectChat = useCallback(
     async (chat: ChatType) => {
@@ -633,7 +666,10 @@ const SidePanel = () => {
         onStopSubagent={stopSubagent}
         onStreamComplete={handleStreamComplete}
         selectedModel={selectedModel}
+        injectedInput={injectedInput}
+        onMemoryOpen={() => setMemoryOpen(true)}
       />
+      <MemoryPanel open={memoryOpen} onClose={() => setMemoryOpen(false)} />
       <Toaster />
     </LocaleProvider>
   );

@@ -27,8 +27,9 @@ import { runSessionJournal } from './memory/memory-journal';
 import { initNetworkStatus } from './network/network-status';
 import { setCronServiceRef } from './tools/scheduler';
 import { createKeepAliveManager } from './utils/keep-alive';
+import { initContextMenus, registerContextMenuListeners } from './context-menus';
 import { initSidePanelBehavior } from '@extension/shared';
-import { getScheduledTask } from '@extension/storage';
+import { getScheduledTask, updateWorkspaceFile } from '@extension/storage';
 import type { LLMRequestMessage, LogCategory } from '@extension/shared';
 
 // ── Port Listener for LLM Streaming ───────────
@@ -79,7 +80,10 @@ chrome.runtime.onInstalled.addListener(() => {
   heartbeatService.start().catch(err => {
     heartbeatLog.error('onInstalled heartbeat start failed', { error: String(err) });
   });
+  initContextMenus();
 });
+
+registerContextMenuListeners();
 chrome.runtime.onStartup.addListener(() => {
   heartbeatService.start().catch(err => {
     heartbeatLog.error('onStartup heartbeat start failed', { error: String(err) });
@@ -198,6 +202,13 @@ const messageHandlers: Record<string, MessageHandler> = {
   OFFSCREEN_STORAGE_REMOVE: async request => {
     const keys = request.keys as string | string[];
     await chrome.storage.local.remove(keys);
+    return { success: true };
+  },
+
+  WORKSPACE_UPDATE: async request => {
+    const id = request.id as string;
+    const content = request.content as string;
+    await updateWorkspaceFile(id, { content });
     return { success: true };
   },
 

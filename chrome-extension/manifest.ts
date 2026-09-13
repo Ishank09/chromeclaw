@@ -47,6 +47,7 @@ const manifest = {
     'identity',
     'cookies',
     'declarativeNetRequest',
+    'contextMenus',
   ],
   // oauth2 is only included when a Google Cloud client ID is configured.
   // Without it, Chrome rejects the manifest with "Invalid value for 'oauth2.client_id'".
