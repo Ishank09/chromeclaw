@@ -107,6 +107,10 @@ export type { SubagentProgressCardProps, SubagentResultCardProps } from './subag
 export { TreeNode } from './workspace-tree-node';
 export type { TreeNodeProps } from './workspace-tree-node';
 
+// Memory panel
+export { MemoryPanel } from './memory-panel';
+export type { MemoryPanelProps } from './memory-panel';
+
 // Shared components (formerly @extension/ui)
 export * from './LoadingSpinner';
 export * from './error-display/ErrorDisplay';

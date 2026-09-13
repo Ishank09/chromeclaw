@@ -12,6 +12,8 @@ import type { Attachment, ChatMessage, ChatModel, SessionUsage, ThinkingLevel, S
 
 type AgentInfo = { id: string; name: string; emoji: string };
 
+type InjectedInput = { text: string; autoSubmit: boolean; nonce: number };
+
 type ChatProps = {
   chatId: string;
   models: ChatModel[];
@@ -30,6 +32,8 @@ type ChatProps = {
   activeSubagents?: SubagentProgressInfo[];
   onStopSubagent?: (runId: string) => void;
   onRenameChat?: (title: string) => void;
+  injectedInput?: InjectedInput;
+  onMemoryOpen?: () => void;
 };
 
 const Chat = ({
@@ -50,6 +54,8 @@ const Chat = ({
   activeSubagents,
   onStopSubagent,
   onRenameChat,
+  injectedInput,
+  onMemoryOpen,
 }: ChatProps) => {
   // Track accumulated token usage for context status badge
   const usageRef = useRef({
@@ -212,6 +218,25 @@ const Chat = ({
     onTtsAudio: handleTtsAudio,
   });
 
+  // ── Injected input from context menu actions ──
+  // Keep a ref so the effect always calls the latest sendMessage (avoids stale closure).
+  const sendMessageRef = useRef(sendMessage);
+  sendMessageRef.current = sendMessage;
+
+  useEffect(() => {
+    if (!injectedInput) return;
+    console.log('[chromeclaw] injectedInput effect fired', injectedInput);
+    setInput(injectedInput.text);
+    if (injectedInput.autoSubmit) {
+      // Small delay lets React flush the setInput state before sendMessage reads status.
+      setTimeout(() => {
+        console.log('[chromeclaw] calling sendMessage');
+        sendMessageRef.current(injectedInput.text);
+        setInput('');
+      }, 100);
+    }
+  }, [injectedInput?.nonce]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Append subagent result messages directly to messages state
   // (bypasses the broken initialMessages → useState path)
   useEffect(() => {
@@ -357,6 +382,7 @@ const Chat = ({
             supportedThinkingLevels={supportedThinkingLevels}
             status={isCompacting ? 'connecting' : status}
             stop={stop}
+            onMemoryOpen={onMemoryOpen}
           />
         </div>
       </div>

@@ -17,7 +17,7 @@ import { cn } from '../utils';
 import { useT } from '@extension/i18n';
 import { useStorage, getSlashCommands } from '@extension/shared';
 import { sttConfigStorage } from '@extension/storage';
-import { SendIcon, SquareIcon, Check } from 'lucide-react';
+import { SendIcon, SquareIcon, Check, Brain } from 'lucide-react';
 import { Select as SelectPrimitive } from 'radix-ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -62,6 +62,7 @@ type ChatInputProps = {
   supportedThinkingLevels?: ThinkingLevel[];
   /** When Auto model is active, shows which model is currently being used. */
   activeModelHint?: string | null;
+  onMemoryOpen?: () => void;
 };
 
 const ChatInput = ({
@@ -78,6 +79,7 @@ const ChatInput = ({
   onThinkingLevelChange,
   supportedThinkingLevels,
   activeModelHint,
+  onMemoryOpen,
 }: ChatInputProps) => {
   const t = useT();
   const sttConfig = useStorage(sttConfigStorage);
@@ -431,6 +433,16 @@ const ChatInput = ({
               disabled={isStreaming}
               onClick={() => fileInputRef.current?.click()}
             />
+            {onMemoryOpen && (
+              <button
+                className="text-muted-foreground hover:text-foreground hover:bg-accent flex size-8 items-center justify-center rounded-md transition-colors"
+                onClick={onMemoryOpen}
+                title="View / edit memory"
+                type="button"
+              >
+                <Brain className="size-4" />
+              </button>
+            )}
             {models.length > 0 && (
               <>
                 {selectedModel && (
