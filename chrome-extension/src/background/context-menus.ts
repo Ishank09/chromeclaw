@@ -1,17 +1,18 @@
 import { nanoid } from 'nanoid';
 import { createWorkspaceFile, listWorkspaceFiles, updateWorkspaceFile } from '@extension/storage';
-import { openSidePanel } from '@extension/shared';
 
 const PARENT_ID = 'chromeclaw';
 const SAVE_MEMORY_ID = 'chromeclaw-save-memory';
 const SIMPLIFY_ID = 'chromeclaw-simplify';
+const GROUP_TABS_ID = 'chromeclaw-group-tabs';
 
 const initContextMenus = (): void => {
   chrome.contextMenus.removeAll(() => {
+    // Parent visible in all contexts (required so Group My Tabs works without selection)
     chrome.contextMenus.create({
       id: PARENT_ID,
       title: 'ChromeClaw',
-      contexts: ['selection'],
+      contexts: ['all'],
     });
     chrome.contextMenus.create({
       id: SAVE_MEMORY_ID,
@@ -24,6 +25,12 @@ const initContextMenus = (): void => {
       parentId: PARENT_ID,
       title: 'Simplify',
       contexts: ['selection'],
+    });
+    chrome.contextMenus.create({
+      id: GROUP_TABS_ID,
+      parentId: PARENT_ID,
+      title: 'Group My Tabs',
+      contexts: ['all'],
     });
   });
 };
@@ -63,62 +70,70 @@ const saveToMemory = async (text: string, sourceUrl: string): Promise<void> => {
   });
 };
 
-const handleContextMenuClick = async (
-  info: chrome.contextMenus.OnClickData,
-  tab?: chrome.tabs.Tab,
-): Promise<void> => {
-  const selectedText = info.selectionText?.trim();
-  if (!selectedText) return;
-
-  if (info.menuItemId === SAVE_MEMORY_ID) {
-    await saveToMemory(selectedText, info.pageUrl ?? tab?.url ?? '');
-  } else if (info.menuItemId === SIMPLIFY_ID) {
-    // Store action in session storage so the side panel picks it up whenever ready.
-    // This avoids the race condition where sendMessage fires before the panel mounts.
-    await chrome.storage.session.set({
-      chromeclaw_pending_action: { action: 'simplify', text: selectedText, nonce: Date.now() },
+const openPanel = (tab?: chrome.tabs.Tab): void => {
+  const sidePanelApi = (chrome as unknown as { sidePanel?: { open: (opts: object) => Promise<void> } }).sidePanel;
+  if (sidePanelApi?.open) {
+    const openOpts: Record<string, unknown> = {};
+    if (tab?.windowId) openOpts['windowId'] = tab.windowId;
+    sidePanelApi.open(openOpts).catch(() => {
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icon-48.png',
+        title: 'ChromeClaw',
+        message: 'Click the ChromeClaw icon to open the panel.',
+      });
     });
-    await openSidePanel();
+  } else {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon-48.png',
+      title: 'ChromeClaw',
+      message: 'Click the ChromeClaw icon to open the panel.',
+    });
   }
 };
 
 const registerContextMenuListeners = (): void => {
   chrome.contextMenus.onClicked.addListener((info, tab) => {
-    const selectedText = info.selectionText?.trim();
-    if (!selectedText) return;
-
     if (info.menuItemId === SIMPLIFY_ID) {
-      // Store the action first so the side panel can pick it up whenever it opens.
-      // Use chrome.storage.local (not session) — broader Brave compatibility.
+      const selectedText = info.selectionText?.trim();
+      if (!selectedText) return;
+
       chrome.storage.local
         .set({ chromeclaw_pending_action: { action: 'simplify', text: selectedText, nonce: Date.now() } })
         .catch(err => console.error('[context-menu] Storage error:', err));
 
-      // sidePanel.open() must be called synchronously during the user gesture.
-      // Brave may not support it from context menus — fall back to a notification.
-      const sidePanelApi = (chrome as unknown as { sidePanel?: { open: (opts: object) => Promise<void> } }).sidePanel;
-      if (sidePanelApi?.open) {
-        const openOpts: Record<string, unknown> = {};
-        if (tab?.windowId) openOpts['windowId'] = tab.windowId;
-        sidePanelApi.open(openOpts).catch(() => {
-          chrome.notifications.create({
-            type: 'basic',
-            iconUrl: 'icon-48.png',
-            title: 'ChromeClaw — Simplify ready',
-            message: 'Click the ChromeClaw icon to open the panel and run Simplify.',
+      // Must call synchronously during user gesture
+      openPanel(tab);
+    } else if (info.menuItemId === GROUP_TABS_ID) {
+      // Open panel immediately (synchronous gesture requirement)
+      openPanel(tab);
+
+      // Async: collect tabs and store pending action
+      chrome.tabs
+        .query({ currentWindow: true })
+        .then(tabs => {
+          const filtered = tabs
+            .filter(
+              t =>
+                t.id != null &&
+                t.url &&
+                !t.url.startsWith('chrome://') &&
+                !t.url.startsWith('brave://') &&
+                !t.url.startsWith('about:') &&
+                !t.url.startsWith('chrome-extension://'),
+            )
+            .map(t => ({ id: t.id!, title: t.title ?? t.url ?? '', url: t.url ?? '' }));
+          return chrome.storage.local.set({
+            chromeclaw_pending_action: { action: 'group-tabs', tabs: filtered, nonce: Date.now() },
           });
-        });
-      } else {
-        chrome.notifications.create({
-          type: 'basic',
-          iconUrl: 'icon-48.png',
-          title: 'ChromeClaw — Simplify ready',
-          message: 'Click the ChromeClaw icon to open the panel and run Simplify.',
-        });
-      }
-    } else {
-      handleContextMenuClick(info, tab).catch(err => {
-        console.error('[context-menu] Error:', err);
+        })
+        .catch(err => console.error('[context-menu] Tab query error:', err));
+    } else if (info.menuItemId === SAVE_MEMORY_ID) {
+      const selectedText = info.selectionText?.trim();
+      if (!selectedText) return;
+      saveToMemory(selectedText, info.pageUrl ?? tab?.url ?? '').catch(err => {
+        console.error('[context-menu] Save memory error:', err);
       });
     }
   });

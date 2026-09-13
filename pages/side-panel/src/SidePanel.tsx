@@ -67,6 +67,7 @@ const SidePanel = () => {
   const [memoryOpen, setMemoryOpen] = useState(false);
   const [injectedInput, setInjectedInput] = useState<{ text: string; autoSubmit: boolean; nonce: number } | undefined>();
   const handleNewChatRef = useRef<() => void>(() => {});
+  const [pageContext, setPageContext] = useState<{ url: string; title: string } | undefined>();
   const [agents, setAgents] = useState<{ id: string; name: string; emoji: string }[]>([]);
   const [activeAgentId, setActiveAgentId] = useState('main');
   const activeAgentIdRef = useRef(activeAgentId);
@@ -283,6 +284,16 @@ const SidePanel = () => {
         setSidebarOpen(false);
         setInjectedInput({ text: `Simplify this:\n${action.text}`, autoSubmit: true, nonce: Date.now() });
         chrome.storage.local.remove('chromeclaw_pending_action');
+      } else if (action.action === 'group-tabs' && Array.isArray(action.tabs)) {
+        const tabs = action.tabs as { id: number; title: string; url: string }[];
+        const tabList = tabs.map((t, i) => `${i + 1}. [Tab ${t.id}] ${t.title} — ${t.url}`).join('\n');
+        setSidebarOpen(false);
+        setInjectedInput({
+          text: `Please group my open browser tabs by topic. Here are all my open tabs:\n\n${tabList}\n\nGroup them intelligently using the browser tool's group_tabs action. Pick meaningful group names and assign colors.`,
+          autoSubmit: true,
+          nonce: Date.now(),
+        });
+        chrome.storage.local.remove('chromeclaw_pending_action');
       }
     };
 
@@ -301,6 +312,31 @@ const SidePanel = () => {
     };
     chrome.storage.onChanged.addListener(onChange);
     return () => chrome.storage.onChanged.removeListener(onChange);
+  }, []);
+
+  // Track the active tab so Chat can inject it as page context
+  useEffect(() => {
+    const applyTab = (tab?: chrome.tabs.Tab) => {
+      if (tab?.url && tab.title && !tab.url.startsWith('chrome://') && !tab.url.startsWith('brave://')) {
+        setPageContext({ url: tab.url, title: tab.title });
+      }
+    };
+
+    chrome.tabs.query({ active: true, currentWindow: true }).then(tabs => applyTab(tabs[0]));
+
+    const onActivated = (info: chrome.tabs.TabActiveInfo) => {
+      chrome.tabs.get(info.tabId).then(applyTab).catch(() => {});
+    };
+    const onUpdated = (_id: number, change: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+      if (change.status === 'complete' && tab.active) applyTab(tab);
+    };
+
+    chrome.tabs.onActivated.addListener(onActivated);
+    chrome.tabs.onUpdated.addListener(onUpdated);
+    return () => {
+      chrome.tabs.onActivated.removeListener(onActivated);
+      chrome.tabs.onUpdated.removeListener(onUpdated);
+    };
   }, []);
 
   const handleAgentChange = useCallback(
@@ -365,6 +401,8 @@ const SidePanel = () => {
   );
 
   const handleNewChat = useCallback(() => {
+    // Clear injected input so it doesn't replay in the new chat
+    setInjectedInput(undefined);
     triggerJournal(currentChatIdRef.current);
     const newId = nanoid();
     setChatId(newId);
@@ -668,6 +706,7 @@ const SidePanel = () => {
         selectedModel={selectedModel}
         injectedInput={injectedInput}
         onMemoryOpen={() => setMemoryOpen(true)}
+        pageContext={pageContext}
       />
       <MemoryPanel open={memoryOpen} onClose={() => setMemoryOpen(false)} />
       <Toaster />
