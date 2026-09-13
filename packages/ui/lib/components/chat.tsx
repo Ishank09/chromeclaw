@@ -7,6 +7,7 @@ import { getEffectiveContextLimit, useLLMStream, parseSlashCommand, executeSlash
 import { addMessage, deleteMessagesAfter, thinkingLevelStorage } from '@extension/storage';
 import { toast } from 'sonner';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { nanoid } from 'nanoid';
 import type { UIArtifact } from '../artifact-types';
 import type { Attachment, ChatMessage, ChatModel, SessionUsage, ThinkingLevel, SubagentProgressInfo } from '@extension/shared';
 
@@ -34,6 +35,7 @@ type ChatProps = {
   onRenameChat?: (title: string) => void;
   injectedInput?: InjectedInput;
   onMemoryOpen?: () => void;
+  pageContext?: { url: string; title: string };
 };
 
 const Chat = ({
@@ -56,6 +58,7 @@ const Chat = ({
   onRenameChat,
   injectedInput,
   onMemoryOpen,
+  pageContext,
 }: ChatProps) => {
   // Track accumulated token usage for context status badge
   const usageRef = useRef({
@@ -295,6 +298,12 @@ const Chat = ({
 
   const [artifact, setArtifact] = useState<UIArtifact>(initialArtifactData);
 
+  // Inject page context as a system message on the first send of each chat
+  const pageContextInjectedRef = useRef(false);
+  useEffect(() => {
+    pageContextInjectedRef.current = false;
+  }, [chatId]);
+
   return (
     <ArtifactContext.Provider value={{ artifact, rawSetArtifact: setArtifact }}>
       <div className="bg-background flex h-dvh min-w-0 flex-col">
@@ -371,6 +380,20 @@ const Chat = ({
                   toast.error(err instanceof Error ? err.message : 'Command failed');
                 });
                 return;
+              }
+              // Inject current page as context on the first message of each chat
+              if (pageContext && !pageContextInjectedRef.current) {
+                pageContextInjectedRef.current = true;
+                setMessages(prev => [
+                  ...prev,
+                  {
+                    id: nanoid(),
+                    chatId,
+                    role: 'system' as const,
+                    parts: [{ type: 'text' as const, text: `Context: The user is currently viewing "${pageContext.title}" — ${pageContext.url}` }],
+                    createdAt: Date.now(),
+                  },
+                ]);
               }
               sendMessage(content, attachments);
             }}
