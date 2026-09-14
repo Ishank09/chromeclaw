@@ -187,6 +187,11 @@ const handleLLMStream = async (
   const { chatId, messages, model: modelConfig, assistantMessageId, thinkingLevel } = request;
   const assistantParts: ChatMessagePart[] = [];
 
+  // Abort controller tied to port lifetime — aborted when user clicks Stop or closes panel
+  const abortController = new AbortController();
+  const onPortDisconnect = () => abortController.abort();
+  port.onDisconnect.addListener(onPortDisconnect);
+
   streamLog.info('Stream started', { chatId, model: modelConfig.id });
   streamLog.trace('Stream request detail', {
     chatId, modelId: modelConfig.id, provider: modelConfig.provider,
@@ -315,6 +320,7 @@ const handleLLMStream = async (
         transformContext: notifyingTransformContext,
         chatId,
         thinkingLevel,
+        signal: abortController.signal,
         onProviderLimitDetected: setProviderLimit,
         onRetry: info => {
           assistantParts.length = 0;
@@ -605,6 +611,8 @@ const handleLLMStream = async (
         await touchChat(chatId);
       } catch { /* best-effort */ }
     }
+  } finally {
+    port.onDisconnect.removeListener(onPortDisconnect);
   }
 };
 

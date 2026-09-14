@@ -399,6 +399,8 @@ const executeToolCalls = async (
   let steeringMessages: AgentMessage[] | undefined;
 
   for (let index = 0; index < toolCalls.length; index++) {
+    if (signal?.aborted) break;
+
     const toolCall = toolCalls[index];
     const tool = tools?.find(t => t.name === toolCall.name);
 

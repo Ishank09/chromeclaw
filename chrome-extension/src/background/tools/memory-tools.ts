@@ -1,6 +1,8 @@
 import { getActiveAgentId, getWorkspaceFile } from './tool-utils';
 import { hybridSearch } from '../memory/hybrid-search';
-import { syncMemoryIndex } from '../memory/memory-sync';
+import { invalidateMemoryIndex, syncMemoryIndex } from '../memory/memory-sync';
+import { createWorkspaceFile, listWorkspaceFiles, updateWorkspaceFile } from '@extension/storage';
+import { nanoid } from 'nanoid';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 
@@ -77,7 +79,51 @@ const executeMemoryGet = async (args: MemoryGetArgs): Promise<string> => {
   return selected.map((line, i) => `${startLine + i + 1}: ${line}`).join('\n');
 };
 
-export { memorySearchSchema, memoryGetSchema, executeMemorySearch, executeMemoryGet };
+// ── memory_save ─────────────────────────────────
+
+const memorySaveSchema = Type.Object({
+  content: Type.String({ description: 'Text content to save into memory' }),
+  title: Type.Optional(Type.String({ description: 'Optional heading/title for this memory entry' })),
+});
+
+type MemorySaveArgs = Static<typeof memorySaveSchema>;
+
+const executeMemorySave = async (args: MemorySaveArgs): Promise<string> => {
+  const { content, title } = args;
+  if (!content.trim()) return 'Error: content must not be empty.';
+
+  const agentId = await getActiveAgentId();
+  const today = new Date().toISOString().split('T')[0]!;
+  const path = `memory/${today}.md`;
+
+  const timestamp = new Date().toLocaleTimeString();
+  const heading = title ? `\n## ${title} — ${timestamp}\n` : `\n## Saved at ${timestamp}\n`;
+  const entry = `${heading}\n${content.trim()}\n`;
+
+  const allFiles = await listWorkspaceFiles(agentId);
+  const existing = allFiles.find(f => f.name === path);
+
+  if (existing) {
+    await updateWorkspaceFile(existing.id, { content: (existing.content ?? '') + entry });
+  } else {
+    await createWorkspaceFile({
+      id: nanoid(),
+      name: path,
+      content: `# Memory — ${today}\n${entry}`,
+      enabled: true,
+      owner: 'agent',
+      predefined: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      agentId,
+    });
+  }
+
+  invalidateMemoryIndex(agentId);
+  return `Saved to ${path}.`;
+};
+
+export { memorySearchSchema, memoryGetSchema, memorySaveSchema, executeMemorySearch, executeMemoryGet, executeMemorySave };
 
 // ── Tool registration ──
 import type { ToolRegistration } from './tool-registration';
@@ -98,6 +144,14 @@ const memoryToolDefs: ToolRegistration[] = [
       'Read specific lines from a memory or workspace file. Use this after memory_search to get full context around a search result.',
     schema: memoryGetSchema,
     execute: args => executeMemoryGet(args as any),
+  },
+  {
+    name: 'memory_save',
+    label: 'Memory Save',
+    description:
+      'Save text into memory. Use this whenever the user says "save this to memory", "remember this", "store this", or similar. Appends the content to today\'s memory file so it can be retrieved in future sessions.',
+    schema: memorySaveSchema,
+    execute: args => executeMemorySave(args as any),
   },
 ];
 
